@@ -347,15 +347,22 @@ def test_memory_reporting_is_silent_off_mps() -> None:
 
 
 def test_the_padded_width_is_recorded(tmp_path: Path) -> None:
-    """Which shape the accelerator was asked to compile for, per step."""
+    """Which shape the accelerator was asked to compile for, per step.
+
+    Bucketing is switched off so the recorded width is the raw batch
+    maximum. `fit` buckets to 128 by default; bucketing itself is covered
+    by `test_fit_compiles_for_a_handful_of_shapes`.
+    """
     path = tmp_path / "metrics.jsonl"
+    dataset = tiny_dataset()
 
     fit(
         tiny_model(),
-        tiny_dataset(),
+        dataset,
         config=tiny_config(),
         device=CPU,
         pad_id=PAD_ID,
+        pad_to_multiple_of=None,
         log_interval=1,
         metrics_path=path,
         verbose=False,
@@ -364,7 +371,9 @@ def test_the_padded_width_is_recorded(tmp_path: Path) -> None:
     records = [json.loads(line) for line in path.read_text().splitlines()]
 
     assert all(r["pad_width"] > 0 for r in records)
-    assert max(r["pad_width"] for r in records) <= 8
+    assert max(r["pad_width"] for r in records) == max(
+        len(e.input_ids) for e in dataset.examples
+    )
 
 
 def test_fit_compiles_for_a_handful_of_shapes(tmp_path: Path) -> None:
