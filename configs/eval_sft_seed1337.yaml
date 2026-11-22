@@ -1,0 +1,29 @@
+# The SFT baseline of RQ1, evaluated exactly as the base model was.
+#
+#     uv run rlvr-eval --config configs/eval_sft_seed1337.yaml
+#
+# Everything the protocol froze is unchanged from configs/eval_gsm8k.yaml:
+# the same seed, the same dev prefix, the same decoding, the same device.
+# Two fields differ, and both are the point of the comparison:
+#
+#   model_name  the checkpoint instead of the hub model
+#   n_shots     0, because this model was trained on the format - showing
+#               it four examples would measure the prompt, not the training
+#
+# The base model's 4-shot 0.410 is NOT what this is compared against. That
+# was a harness sanity check. This number is the RQ1 baseline.
+version: 1
+
+seed: 1337            # must match the split seed, or "dev" moves
+split: dev
+n_examples: 200       # a prefix of dev's frozen order
+confirm_held_out: false
+
+model_name: checkpoints/sft-seed-1337
+model_revision: main  # ignored for a local directory
+n_shots: 0
+max_new_tokens: 256
+
+batch_size: 8
+device: mps
+dtype: float32
