@@ -1,7 +1,7 @@
 [project]
 name = "verifiable-reward-lab"
 version = "0.1.0"
-description = "Empirical study of reinforcement learning with verifiable rewards: GRPO, controlled ablations, uncertainty, and failure analysis."
+description = "A reinforcement learning research lab: foundational algorithms built from scratch, and an empirical study of RL with verifiable rewards (GRPO on GSM8K)."
 readme = "README.md"
 authors = [
     { name = "vitorhcsousa", email = "vitorsousavhcs@outlook.com" }
@@ -21,8 +21,8 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/vitorhcsousa/verifiable-reward-lab"
-Issues = "https://github.com/vitorhcsousa/verifiable-reward-lab/issues"
+Repository = "https://github.com/vitorhcsousa/reinforcement-learning-lab"
+Issues = "https://github.com/vitorhcsousa/reinforcement-learning-lab/issues"
 
 [project.optional-dependencies]
 # Optional because a run must be reproducible without a tracking account:
@@ -44,8 +44,13 @@ build-backend = "hatchling.build"
 # the rebrand until 2026-09-06, when the module was finally renamed too;
 # the cost of that churn was paid once, on purpose, rather than left as a
 # permanent footnote in every import line.
+#
+# the github repository was renamed to reinforcement-learning-lab on
+# 2026-11-22 without renaming either: the distribution, the import package
+# and the rlvr- entry points are quoted in published articles. general rl
+# lives beside it in rl_lab.
 [tool.hatch.build.targets.wheel]
-packages = ["src/verifiable_reward_lab"]
+packages = ["src/verifiable_reward_lab", "src/rl_lab"]
 
 [dependency-groups]
 dev = [
