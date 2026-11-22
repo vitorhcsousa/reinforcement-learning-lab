@@ -26,7 +26,7 @@ def _(mo):
     > **How to use:** drag the sliders in the Configuration section below,
     > then scroll down. Every visualization updates automatically.
 
-    **Code:** [`src/verifiable_reward_lab/model/attention.py`](https://github.com/vitorhcsousa/verifiable-reward-lab)
+    **Code:** [`src/verifiable_reward_lab/model/attention.py`](https://github.com/vitorhcsousa/reinforcement-learning-lab/blob/master/src/verifiable_reward_lab/model/attention.py)
     **Article:** [Attention Is All You Need to Implement](https://www.vitorsousa.com/foundations/attention-from-scratch)
     """)
     return

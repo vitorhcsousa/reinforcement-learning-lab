@@ -1,1 +1,1 @@
-"""Learning with Verifiable Rewards — https://github.com/vitorhcsousa/verifiable-reward-lab"""
+"""Learning with Verifiable Rewards — https://github.com/vitorhcsousa/reinforcement-learning-lab"""
