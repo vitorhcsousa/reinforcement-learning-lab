@@ -19,7 +19,11 @@ import pytest
 import torch
 
 from verifiable_reward_lab.model import DecoderTransformer, TransformerConfig
-from verifiable_reward_lab.training.losses import cross_entropy_loss
+from verifiable_reward_lab.training.losses import (
+    IGNORE_INDEX,
+    causal_lm_loss,
+    cross_entropy_loss,
+)
 
 # =========================================================================
 # Constants and fixtures
@@ -255,3 +259,99 @@ def test_rejects_int32_targets() -> None:
     targets = torch.randint(0, VOCAB, (B, T), dtype=torch.int32)
     with pytest.raises(ValueError, match="torch.long"):
         cross_entropy_loss(logits, targets)
+
+
+# =========================================================================
+# causal_lm_loss: the shift, the mask, and what they cost when wrong
+# =========================================================================
+
+
+def confident_logits(labels: torch.Tensor, vocab_size: int) -> torch.Tensor:
+    """Logits that predict `labels` shifted one position left, confidently.
+
+    Position t is given a large score for the token at t+1, which is what a
+    correctly shifted loss rewards. The last position predicts nothing and
+    is left uniform, so a loss that failed to drop it would show up here.
+    """
+    b, t = labels.shape
+    logits = torch.zeros(b, t, vocab_size)
+    for i in range(b):
+        for j in range(t - 1):
+            logits[i, j, labels[i, j + 1]] = 20.0
+    return logits
+
+
+def test_a_correctly_shifted_loss_is_near_zero() -> None:
+    labels = torch.tensor([[1, 2, 3, 4]])
+
+    loss = causal_lm_loss(confident_logits(labels, 8), labels)
+
+    assert loss.item() == pytest.approx(0.0, abs=1e-6)
+
+
+def test_an_unshifted_loss_would_be_far_from_zero() -> None:
+    """The failure this file exists to prevent: predicting the token AT t
+    instead of the one after it still trains, and still lowers a loss."""
+    labels = torch.tensor([[1, 2, 3, 4]])
+    logits = torch.zeros(1, 4, 8)
+    for j in range(4):
+        logits[0, j, labels[0, j]] = 20.0
+
+    assert causal_lm_loss(logits, labels).item() > 1.0
+
+
+def test_ignored_positions_do_not_enter_the_mean() -> None:
+    """Masking the prompt must change the value, not just the gradient."""
+    labels = torch.tensor([[1, 2, 3, 4]])
+    logits = confident_logits(labels, 8)
+    logits[0, 1, :] = 0.0  # position 1 now predicts label 3 badly
+
+    masked = labels.clone()
+    masked[0, 2] = IGNORE_INDEX
+
+    assert causal_lm_loss(logits, labels).item() > 0.5
+    assert causal_lm_loss(logits, masked).item() == pytest.approx(0.0, abs=1e-6)
+
+
+def test_padding_does_not_dilute_the_loss() -> None:
+    """Two batches, same content, different padding: the same number."""
+    labels = torch.tensor([[1, 2, 3]])
+    logits = confident_logits(labels, 8)
+    logits[0, 0, :] = 0.0
+
+    padded_labels = torch.cat([labels, torch.full((1, 3), IGNORE_INDEX)], dim=1)
+    padded_logits = torch.cat([logits, torch.zeros(1, 3, 8)], dim=1)
+
+    assert causal_lm_loss(padded_logits, padded_labels).item() == pytest.approx(
+        causal_lm_loss(logits, labels).item()
+    )
+
+
+def test_an_all_masked_batch_is_rejected() -> None:
+    """Left alone it returns nan, which backpropagates into every parameter
+    and is noticed hours later as a curve that went flat."""
+    labels = torch.full((2, 4), IGNORE_INDEX)
+
+    with pytest.raises(ValueError, match="no labelled position"):
+        causal_lm_loss(torch.zeros(2, 4, 8), labels)
+
+
+def test_causal_lm_loss_validates_shapes_and_dtype() -> None:
+    labels = torch.tensor([[1, 2, 3]])
+
+    with pytest.raises(ValueError, match="leading dims"):
+        causal_lm_loss(torch.zeros(1, 4, 8), labels)
+
+    with pytest.raises(ValueError, match="torch.long"):
+        causal_lm_loss(torch.zeros(1, 3, 8), labels.float())
+
+
+def test_causal_lm_loss_carries_grad() -> None:
+    labels = torch.tensor([[1, 2, 3, 4]])
+    logits = torch.randn(1, 4, 8, requires_grad=True)
+
+    causal_lm_loss(logits, labels).backward()
+
+    assert logits.grad is not None
+    # the last position predicts nothing, so it must receive no gradient
+    assert torch.equal(logits.grad[0, -1], torch.zeros(8))

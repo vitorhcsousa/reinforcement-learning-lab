@@ -21,8 +21,11 @@ lr: 1.0e-5
 warmup_ratio: 0.03
 weight_decay: 0.0
 grad_clip: 1.0
-batch_size: 8
-grad_accum: 2         # effective batch 16, which is what the lr was picked against
+batch_size: 2
+grad_accum: 8         # effective batch 16, which is what the lr was picked against
+                      # 2x8 rather than 8x2: at a 151936-token vocabulary the
+                      # logits of one microbatch are the largest tensor in the
+                      # run, and 8 wide did not fit in 32 GB of unified memory
 
 device: mps
 dtype: float32

@@ -60,8 +60,8 @@ class SFTConfig:
     warmup_ratio: float = 0.03
     weight_decay: float = 0.0
     grad_clip: float = 1.0
-    batch_size: int = 8
-    grad_accum: int = 2
+    batch_size: int = 2
+    grad_accum: int = 8
     """Effective batch is batch_size * grad_accum, and that product is what
     the learning rate was chosen against."""
 
