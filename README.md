@@ -60,7 +60,7 @@ Principles, for every study and every module:
 | Track | Stages | Status |
 | :-- | :-- | :-- |
 | Foundations | transformer, KV-cache, sampling, tokenizer, data, training loop | verified |
-| General RL (`rl_lab`) | finite MDP → dynamic programming → bandits → model-free → value-based → policy gradient | **not started — next: finite MDP** |
+| General RL (`rl_lab`) | experiment contract → finite MDP → dynamic programming → bandits → model-free → value-based → policy gradient | **experiment contract done; next: finite MDP** |
 | Post-training (study) | verifier → evaluation → SFT → group rollout → GRPO → ablations | verifier and evaluation done; SFT partial; rollout and GRPO not started |
 
 Full roadmap, with what "done" means for each stage: [docs/roadmap.md](docs/roadmap.md).
@@ -69,7 +69,8 @@ Full roadmap, with what "done" means for each stage: [docs/roadmap.md](docs/road
 
 ```text
 src/
-├── rl_lab/                    # general RL — placeholders only, nothing implemented yet
+├── rl_lab/                    # general RL
+│   ├── experiment/            #   run contract: config, seeds, run directory, smoke experiment
 │   ├── mdp/                   #   finite MDPs                       (next)
 │   ├── dynamic_programming/   #   policy / value iteration
 │   ├── bandits/               #   multi-armed and contextual
@@ -124,8 +125,9 @@ config.
 | RLVR group rollout | **Not implemented** | `rollout/` is a placeholder with no tests |
 | GRPO training | **Not implemented** | only the frozen hyperparameters, `configs/grpo_base.yaml` |
 | Contextual bandits | **Blog code snippets only; unverified** | [studies/contextual-bandits](studies/contextual-bandits/README.md) |
-| General RL (`rl_lab`) | **Not implemented** | empty placeholder packages |
-| CI | **green on `master`** | ruff, ty and pytest; 495 tests pass |
+| Experiment contract (`rl_lab.experiment`) | **Implemented**, tests pass; smoke run **verified from a clean checkout** | [docs/experiment-contract.md](docs/experiment-contract.md); same seed → byte-identical `metrics.jsonl`, measured return matches the closed form |
+| General RL algorithms (`rl_lab`) | **Not implemented** | empty placeholder packages |
+| CI | **green on `master`** | ruff, ty and pytest; 594 tests pass |
 
 ## Getting Started
 
@@ -180,6 +182,7 @@ make data       # download + verify the pinned corpora
 make train      # the tiny reference run
 make reference  # the reference run twice, then check the two agree
 make eval       # base model on GSM8K dev, from the committed config
+make rl-smoke   # the general-RL smoke experiment (CPU, <1 s)
 make check      # lint + type check + tests (what CI runs)
 make test-cov   # tests with coverage
 make format     # auto-format
@@ -214,6 +217,19 @@ never widened to rescue a reproduction that failed.
 | x86-64, Linux, CPU | 2.13.0 | 80 s | 1.7677 | reported 2026-08; no artifact kept |
 
 Not yet verified: a run from a fresh clone with an empty `data/`.
+
+### general RL: the smoke experiment
+
+```bash
+make rl-smoke   # writes runs/rl/scripted_walk/RandomWalk-v0/seed-1337/
+```
+
+Every `rl_lab` run follows the [experiment contract](docs/experiment-contract.md):
+a validated config, split random streams, and a run directory that is never
+reused, holding `config.yaml`, raw `metrics.jsonl` and a `summary.json` that
+names the config hash, the metrics hash, the versions and the commit. The
+smoke experiment is a scripted random walk with a closed-form expected return;
+the contract page has the clean-clone reproduction procedure.
 
 ### the verifiable-rewards study
 

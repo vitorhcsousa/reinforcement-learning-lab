@@ -23,6 +23,7 @@ Built for the verifiable-rewards study, and the base everything neural reuses.
 
 | # | Stage | Module | Status |
 | --: | :-- | :-- | :-- |
+| 0 | Experiment contract — validated config, split seeds, never-reused run directory, smoke experiment with a closed-form answer | `rl_lab/experiment/` | Verified — [contract](experiment-contract.md) |
 | 1 | **Finite MDP model** — states, actions, transition and reward tensors, a few classic environments | `rl_lab/mdp/` | **Next** |
 | 2 | Dynamic programming — policy evaluation, policy iteration, value iteration | `rl_lab/dynamic_programming/` | Not started |
 | 3 | Bandits — multi-armed, then contextual (ε-greedy, UCB, LinUCB, Thompson sampling) | `rl_lab/bandits/` | Not started — see [the study](../studies/contextual-bandits/README.md) |
