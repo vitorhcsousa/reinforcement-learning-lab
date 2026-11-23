@@ -1,4 +1,4 @@
-.PHONY: help install dev data train eval reference lint format check test test-cov type clean pre-commit ci
+.PHONY: help install dev data train eval reference rl-smoke lint format check test test-cov type clean pre-commit ci
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,9 @@ reference: ## Run the reference config twice on one seed and check they agree
 	uv run rlvr-train --config configs/tiny.yaml --out runs/ref-a
 	uv run rlvr-train --config configs/tiny.yaml --out runs/ref-b
 	uv run rlvr-compare runs/ref-a runs/ref-b
+
+rl-smoke: ## Run the general-RL smoke experiment (CPU, <1 s); refuses an existing run dir
+	uv run python -m rl_lab.experiment.smoke --config configs/rl_smoke.yaml
 
 lint: ## Run ruff linter
 	uv run ruff check src/ tests/

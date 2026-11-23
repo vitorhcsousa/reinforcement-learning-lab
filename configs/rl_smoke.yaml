@@ -1,0 +1,32 @@
+# The general-RL smoke experiment: the run contract end to end, on CPU, in
+# well under a second, with an answer known in closed form.
+#
+#     make rl-smoke
+#     uv run python -m rl_lab.experiment.smoke --config configs/rl_smoke.yaml
+#
+# Not configs/tiny.yaml, which is the transformer reproduction run.
+version: 1
+
+env_id: RandomWalk-v0
+env_params:
+  length: 6             # positions 0..6; 0 and 6 are terminal
+  start: 3
+  slip: 0.2             # a push is reversed with this probability
+
+algorithm_id: scripted_walk
+algorithm_params:
+  train_p_right: 0.5    # q = 0.5: E[return] = 3/6, mean length 9, so the
+                        # 20-step limit truncates some episodes
+  eval_p_right: 0.9     # q = 0.74: E[return] = 0.95843... with no time limit.
+                        # stochastic on purpose: a deterministic evaluation
+                        # policy would hide a leak from the training stream
+
+seed: 1337
+train_steps: 2000
+eval_interval: 500
+eval_episodes: 100
+max_episode_steps: 20
+
+max_wall_clock_s: 60.0
+device: cpu
+out_dir: null           # runs/rl/scripted_walk/RandomWalk-v0/seed-1337

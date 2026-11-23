@@ -7,8 +7,7 @@ from importlib.metadata import entry_points
 
 import pytest
 
-RL_LAB = (
-    "rl_lab",
+RL_LAB_PLACEHOLDERS = (
     "rl_lab.bandits",
     "rl_lab.mdp",
     "rl_lab.dynamic_programming",
@@ -16,6 +15,8 @@ RL_LAB = (
     "rl_lab.value_based",
     "rl_lab.policy_gradient",
 )
+
+RL_LAB = ("rl_lab", "rl_lab.experiment", *RL_LAB_PLACEHOLDERS)
 
 RLVR = (
     "verifiable_reward_lab",
@@ -45,12 +46,10 @@ def test_rl_lab_placeholders_export_nothing() -> None:
 
     Delete a subpackage from this check in the commit that implements it.
     """
-    # importing a subpackage binds its name on the parent; that is not code
-    subpackages = {name.rsplit(".", 1)[-1] for name in RL_LAB[1:]}
-    for name in RL_LAB:
+    for name in RL_LAB_PLACEHOLDERS:
         module = importlib.import_module(name)
         public = {n for n in vars(module) if not n.startswith("_")}
-        assert public <= subpackages, f"{name} exports {public - subpackages}"
+        assert public == set(), f"{name} exports {public}"
 
 
 @pytest.mark.parametrize(("command", "target"), COMMANDS.items())
